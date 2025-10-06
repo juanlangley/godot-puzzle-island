@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="LevelDefinitionResource" load_steps=2 format=3 uid="uid://hq456ohb7oka"]
+
+[ext_resource type="Script" uid="uid://lmn7e3jyjyk6" path="res://resources/level/level_definition_resource.gd" id="1_glhk7"]
+
+[resource]
+script = ExtResource("1_glhk7")
+id = "concrete_bricks"
+level_scene_path = "uid://xjmh0ftns4uc"
+metadata/_custom_type_script = "uid://lmn7e3jyjyk6"

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="BuildingResource" load_steps=3 format=3 uid="uid://d6m0cnv3p854"]
+
+[ext_resource type="Script" uid="uid://cgiqc6e46avo6" path="res://resources/building/building_resource.gd" id="1_e73lx"]
+[ext_resource type="PackedScene" uid="uid://de2vsc8u8dgpy" path="res://scenes/building/Base.tscn" id="1_fkueu"]
+
+[resource]
+script = ExtResource("1_e73lx")
+display_name = "Base"
+dimensions = Vector2i(5, 2)
+buildable_radius = 6
+building_scene = ExtResource("1_fkueu")
+is_deletable = false
+metadata/_custom_type_script = "uid://cgiqc6e46avo6"

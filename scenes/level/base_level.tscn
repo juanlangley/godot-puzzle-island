@@ -1,0 +1,57 @@
+[gd_scene load_steps=13 format=3 uid="uid://bxm6it4h25ej5"]
+
+[ext_resource type="Script" uid="uid://cxubiqs0elcyo" path="res://scenes/level/base_level.gd" id="1_o5qli"]
+[ext_resource type="TileSet" uid="uid://db2ac5g8of54p" path="res://resources/highlight_tileset.tres" id="2_0wfyh"]
+[ext_resource type="PackedScene" uid="uid://ci7k8hf73pn8" path="res://scenes/manager/GridManager.tscn" id="2_jyhfs"]
+[ext_resource type="PackedScene" uid="uid://bhp4ynjaud47p" path="res://scenes/manager/building_manager.tscn" id="2_o6xl0"]
+[ext_resource type="TileSet" uid="uid://ce56rhsp37vqq" path="res://resources/tiles.tres" id="2_sugp2"]
+[ext_resource type="PackedScene" uid="uid://de3vjktwnf6i0" path="res://scenes/ui/level_complete_screen.tscn" id="2_u35hf"]
+[ext_resource type="PackedScene" uid="uid://c6tjcpeyvq8dm" path="res://scenes/game_camera.tscn" id="5_2qxot"]
+[ext_resource type="PackedScene" uid="uid://de2vsc8u8dgpy" path="res://scenes/building/Base.tscn" id="5_tbgi4"]
+[ext_resource type="PackedScene" uid="uid://d04huotpateq" path="res://scenes/ui/game_ui.tscn" id="6_tefeu"]
+[ext_resource type="PackedScene" uid="uid://batoibr6s8u6u" path="res://scenes/gold_mine.tscn" id="7_85g3d"]
+[ext_resource type="Texture2D" uid="uid://dg7us1wbqpgw4" path="res://assets/GoldMine_Active.png" id="8_choun"]
+[ext_resource type="PackedScene" uid="uid://dwd2bu6848aun" path="res://scenes/building/building_ghost.tscn" id="8_tipki"]
+
+[node name="BaseLevel" type="Node"]
+script = ExtResource("1_o5qli")
+level_complete_screen_scene = ExtResource("2_u35hf")
+
+[node name="BuildingManager" parent="." node_paths=PackedStringArray("grid_manager", "game_ui", "y_sort_root") instance=ExtResource("2_o6xl0")]
+grid_manager = NodePath("../GridManager")
+game_ui = NodePath("../GameUI")
+y_sort_root = NodePath("../YSortRoot")
+building_ghost_scene = ExtResource("8_tipki")
+
+[node name="GridManager" parent="." node_paths=PackedStringArray("highlight_tile_map_layer", "base_terrain_tile_map_layer") instance=ExtResource("2_jyhfs")]
+highlight_tile_map_layer = NodePath("../YSortRoot/HighlightTileMapLayer")
+base_terrain_tile_map_layer = NodePath("../YSortRoot/BaseTerrainTileMapLayer")
+
+[node name="GameCamera" parent="." instance=ExtResource("5_2qxot")]
+
+[node name="YSortRoot" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="BaseTerrainTileMapLayer" type="TileMapLayer" parent="YSortRoot"]
+unique_name_in_owner = true
+y_sort_enabled = true
+tile_set = ExtResource("2_sugp2")
+
+[node name="FoamTileMapLayer" type="TileMapLayer" parent="YSortRoot/BaseTerrainTileMapLayer"]
+y_sort_enabled = true
+tile_set = ExtResource("2_sugp2")
+
+[node name="Base" parent="YSortRoot" instance=ExtResource("5_tbgi4")]
+unique_name_in_owner = true
+
+[node name="GoldMine" parent="YSortRoot" instance=ExtResource("7_85g3d")]
+unique_name_in_owner = true
+active_texture = ExtResource("8_choun")
+
+[node name="HighlightTileMapLayer" type="TileMapLayer" parent="YSortRoot"]
+modulate = Color(1, 1, 1, 0.49803922)
+y_sort_enabled = true
+tile_set = ExtResource("2_0wfyh")
+
+[node name="GameUI" parent="." node_paths=PackedStringArray("building_manager") instance=ExtResource("6_tefeu")]
+building_manager = NodePath("../BuildingManager")
