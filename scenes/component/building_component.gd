@@ -27,6 +27,14 @@ static func get_danger_building_component(node: Node) -> Array[BuildingComponent
 			result.append(n as BuildingComponent)
 	return result
 
+static func get_non_danger_building_components(node: Node) -> Array[BuildingComponent]:
+	var nodes = node.get_tree().get_nodes_in_group(GROUP)
+	var result: Array[BuildingComponent]
+	for n in nodes:
+		if n is BuildingComponent and !n.building_resource.is_danger_building():
+			result.append(n as BuildingComponent)
+	return result
+
 func _ready() -> void:
 	if building_resource_path != "":
 		building_resource = load(building_resource_path) as BuildingResource

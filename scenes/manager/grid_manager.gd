@@ -137,37 +137,112 @@ func convert_world_position_to_tile_position(world_position: Vector2) -> Vector2
 
 func can_destroy_building(to_destroy_building_component: BuildingComponent) -> bool:
 	if to_destroy_building_component.building_resource.buildable_radius > 0:
-		var dependent_buildings: Array[BuildingComponent] = BuildingComponent.get_valid_building_components(self)
-		var final_dependent_buildings: Array[BuildingComponent] = []
-		for d_b in dependent_buildings:
-			var func_callable = func(tile_pos):
-				return building_to_buildable_tiles[to_destroy_building_component].has(tile_pos)
-			var any_tiles_radius = Rect2iExtensions.to_tiles(d_b.get_tile_area()).any(func_callable)
-			if (d_b != to_destroy_building_component) and any_tiles_radius:
-				final_dependent_buildings.append(d_b)
-		
-		var f_c = func(dependent_building):
-			var tiles_for_building = Rect2iExtensions.to_tiles(dependent_building.get_tile_area())
-			var internal_func = func(tile_pos):
-					var tile_set: Array
-					for dict in building_to_buildable_tiles.keys():
-						if dict != to_destroy_building_component:
-							tile_set.append(building_to_buildable_tiles[dict])
-					#var tile_is_in_set = tile_set.any(func(building_component): building_to_buildable_tiles[building_component].has(tile_pos))
-					var tile_is_in_set := false
-					for bc in building_to_buildable_tiles.keys():
-						if bc == to_destroy_building_component:
-							continue
-						if building_to_buildable_tiles[bc].has(tile_pos):
-							tile_is_in_set = true
-							break
-					return tile_is_in_set
-			return tiles_for_building.all(internal_func)
-			
-		var all_buildings_still_valid = final_dependent_buildings.all(f_c)
-		if !all_buildings_still_valid:
-			return false
+		return !will_building_destruction_create_orphan_buildings(to_destroy_building_component) and is_building_network_connected(to_destroy_building_component)
 	return true
+
+func will_building_destruction_create_orphan_buildings(to_destroy_building_component: BuildingComponent) -> bool:
+	var dependent_buildings: Array[BuildingComponent] = BuildingComponent.get_non_danger_building_components(self)
+	var final_dependent_buildings: Array[BuildingComponent] = []
+	for d_b in dependent_buildings:
+		var func_callable = func(tile_pos):
+			if d_b == to_destroy_building_component: return false
+			if d_b.building_resource.is_base: return false
+			return building_to_buildable_tiles[to_destroy_building_component].has(tile_pos)
+		var any_tiles_radius = Rect2iExtensions.to_tiles(d_b.get_tile_area()).any(func_callable)
+		if (d_b != to_destroy_building_component) and any_tiles_radius:
+			final_dependent_buildings.append(d_b)
+	
+	var f_c = func(dependent_building):
+		var tiles_for_building = Rect2iExtensions.to_tiles(dependent_building.get_tile_area())
+		var internal_func = func(tile_pos):
+				#var tile_set: Array
+				#for dict in building_to_buildable_tiles.keys():
+					#if dict != to_destroy_building_component and dict != dependent_building:
+						#tile_set.append(building_to_buildable_tiles[dict])
+				#var tile_is_in_set = tile_set.any(func(building_component): building_to_buildable_tiles[building_component].has(tile_pos))
+				var tile_is_in_set := false
+				for bc in building_to_buildable_tiles.keys():
+					if bc == to_destroy_building_component or bc == dependent_building:
+						continue
+					if building_to_buildable_tiles[bc].has(tile_pos):
+						tile_is_in_set = true
+						break
+				return tile_is_in_set
+		return tiles_for_building.all(internal_func)
+		
+	var all_buildings_still_valid = final_dependent_buildings.all(f_c)
+	if !all_buildings_still_valid:
+		return true
+	return false
+
+func is_building_network_connected(to_destroy_building_component: BuildingComponent) -> bool:
+	var buildings = BuildingComponent.get_valid_building_components(self)
+	var base_building: BuildingComponent 
+	for build in buildings:
+		if build.building_resource.is_base:
+			base_building = build
+			break
+	var visit_buildings: Array[BuildingComponent]
+	visit_all_connected_buildings(base_building, to_destroy_building_component, visit_buildings)
+	var total_buildings = BuildingComponent.get_valid_building_components(self)
+	var total_buildings_to_visit = 0
+	for build in total_buildings:
+		if build != to_destroy_building_component and build.building_resource.buildable_radius > 0:
+			total_buildings_to_visit += 1 
+	#print("visit_buildings.size() %d" % visit_buildings.size() )
+	return total_buildings_to_visit == visit_buildings.size()
+#
+#func visit_all_connected_buildings(
+	#root_building: BuildingComponent, 
+	#exclude_building: BuildingComponent, 
+	#visited_buildings: Array[BuildingComponent]
+	#) -> void:
+	#var dependent_buildings: Array[BuildingComponent] = BuildingComponent.get_valid_building_components(self)
+	##var final_dependent_buildings: Array[BuildingComponent] = []
+	#for d_b in dependent_buildings:
+		#if d_b.building_resource.danger_radius == 0: continue
+		#if visited_buildings.has(d_b): continue
+		#var func_callable = func(tile_pos):
+			#return building_to_buildable_tiles[root_building].has(tile_pos)
+		#var any_tiles_radius = Rect2iExtensions.to_tiles(d_b.get_tile_area()).any(func_callable)
+		#if (d_b != exclude_building) and any_tiles_radius:
+			#visited_buildings.append(d_b)
+	#for dependent_build in dependent_buildings:
+		#visit_all_connected_buildings(dependent_build, exclude_building, visited_buildings)
+# visited_buildings: pasa un Array[BuildingComponent] que actuará como "set".
+# Si querés O(1) de pertenencia, pasá también un Dictionary como set (ver nota abajo).
+func visit_all_connected_buildings(
+		root_building: BuildingComponent,
+		exclude_building: BuildingComponent,
+		visited_buildings: Array[BuildingComponent]
+		) -> void:
+	# ---- filtro de dependientes (Where ...) ----
+	var dependents: Array[BuildingComponent] = []
+	var root_tiles = building_to_buildable_tiles.get(root_building, [])
+	
+	for bc in BuildingComponent.get_non_danger_building_components(self):
+		if bc.building_resource.buildable_radius == 0:
+			continue
+		if visited_buildings.has(bc):
+			continue
+		# ¿bc toca algún tile de root_building?
+		var tiles := Rect2iExtensions.to_tiles(bc.get_tile_area())
+		# Si devuelve PackedVector2Array, descomentá:
+		# tiles = tiles.to_array()
+
+		var any_tiles_in_radius := tiles.all(
+			func(tp: Vector2i) -> bool:
+				return root_tiles.has(tp))
+
+		if bc != exclude_building and any_tiles_in_radius:
+			dependents.append(bc)
+	# ---- visited.UnionWith(dependents) ----
+		for d in dependents:
+			if not visited_buildings.has(d):
+				visited_buildings.append(d)
+		# ---- foreach dependent -> VisitAllConnectedBuildings(dependent, ...) ----
+		for d in dependents:
+			visit_all_connected_buildings(d, exclude_building, visited_buildings)
 
 func get_buildable_tile_set(is_attack_tiles: bool = false) -> Array[Vector2i]:
 	if is_attack_tiles:

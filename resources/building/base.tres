@@ -7,6 +7,7 @@
 script = ExtResource("1_e73lx")
 display_name = "Base"
 dimensions = Vector2i(5, 2)
+is_base = true
 buildable_radius = 6
 building_scene = ExtResource("1_fkueu")
 is_deletable = false

@@ -5,6 +5,7 @@ class_name BuildingResource
 @export var description: String
 @export var dimensions: Vector2i = Vector2i.ONE
 
+@export var is_base: bool
 @export var resource_cost: int
 @export var buildable_radius: int
 @export var resource_radius: int
