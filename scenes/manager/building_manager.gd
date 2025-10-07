@@ -62,11 +62,11 @@ func update_grid_display() -> void:
 	grid_manager.clear_highlight_tiles()
 	
 	if to_place_building_scene.is_attack_building():
-		grid_manager.highlight_goblin_occupied_tiles()
+		grid_manager.highlight_danger_occupied_tiles()
 		grid_manager.highlight_buildable_tiles(true)
 	else:
 		grid_manager.highlight_buildable_tiles()
-		grid_manager.highlight_goblin_occupied_tiles()
+		grid_manager.highlight_danger_occupied_tiles()
 	
 	if (is_building_placeable_at_area(hover_grid_area)):
 		if to_place_building_scene.is_attack_building():

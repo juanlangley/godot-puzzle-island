@@ -19,6 +19,9 @@ config/icon="res://icon.svg"
 
 GameEvents="*res://autoload/GameEvents.tscn"
 LevelManager="*res://autoload/level_manager.tscn"
+SettingsManager="*res://autoload/settings_manager.tscn"
+Cursor="*res://scenes/ui/cursor.tscn"
+AudioHelpers="*res://autoload/audio_helpers.tscn"
 
 [display]
 
@@ -26,7 +29,6 @@ window/size/viewport_width=1280
 window/size/viewport_height=720
 window/size/window_width_override=1920
 window/size/window_height_override=1080
-window/stretch/mode="canvas_items"
 
 [gui]
 

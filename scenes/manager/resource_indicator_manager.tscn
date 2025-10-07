@@ -1,0 +1,13 @@
+[gd_scene load_steps=4 format=3 uid="uid://btn6elqrbpnpf"]
+
+[ext_resource type="Script" uid="uid://7q4aqpip410v" path="res://scenes/manager/resource_indicator_manager.gd" id="1_nxxf6"]
+[ext_resource type="PackedScene" uid="uid://incqfug7i76o" path="res://scenes/ui/resource_indicator.tscn" id="2_dtruq"]
+[ext_resource type="AudioStream" uid="uid://c5qumdmna8d55" path="res://assets/audio/logs.wav" id="3_cqenk"]
+
+[node name="ResourceIndicatorManager" type="Node"]
+script = ExtResource("1_nxxf6")
+resource_indicator_scene = ExtResource("2_dtruq")
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("3_cqenk")
+bus = &"SFX"

@@ -11,7 +11,7 @@ var valid_buildable_attack_tiles: Array[Vector2i]
 var collected_resource_tiles: Array[Vector2i]
 var all_occuped_tiles: Array[Vector2i]
 var all_tiles_in_building_radius: Array[Vector2i]
-var goblin_ocuppied_tiles: Array[Vector2i]
+var danger_ocuppied_tiles: Array[Vector2i]
 var attack_tiles: Array[Vector2i]
 
 const IS_BUILDABLE: String = "is_buildable"
@@ -25,6 +25,8 @@ const TILE_SIZE := 64
 var all_tile_map_layers: Array[TileMapLayer]
 var tile_map_layer_to_elevation_layer: Dictionary[TileMapLayer, ElevationLayer]
 var building_to_buildable_tiles: Dictionary[BuildingComponent, Array]
+var danger_building_to_tiles: Dictionary[BuildingComponent, Array]
+var attack_building_to_tiles: Dictionary[BuildingComponent, Array]
 
 func _ready() -> void:
 	GameEvents.building_placed_event_handler.connect(_on_building_placed_event_handler)
@@ -76,9 +78,9 @@ func is_tile_area_buildable(tile_area: Rect2, is_attack_tiles: bool = false) -> 
 		return array_custom_data[1] and tile_set_to_check.has(tile_pos) and elevation_layer == target_elevation_layer
 	return tiles.all(pred)
 
-func highlight_goblin_occupied_tiles() -> void:
+func highlight_danger_occupied_tiles() -> void:
 	var atlas_coords = Vector2i(2, 0)
-	for tile_position in goblin_ocuppied_tiles:
+	for tile_position in danger_ocuppied_tiles:
 		highlight_tile_map_layer.set_cell(tile_position, 0, atlas_coords)
 
 func highlight_buildable_tiles(is_attack_tiles: bool = false) -> void:
@@ -138,7 +140,67 @@ func convert_world_position_to_tile_position(world_position: Vector2) -> Vector2
 func can_destroy_building(to_destroy_building_component: BuildingComponent) -> bool:
 	if to_destroy_building_component.building_resource.buildable_radius > 0:
 		return !will_building_destruction_create_orphan_buildings(to_destroy_building_component) and is_building_network_connected(to_destroy_building_component)
+	elif to_destroy_building_component.building_resource.is_attack_building():
+		return can_destroy_barracs(to_destroy_building_component)
 	return true
+
+func get_collected_resource_tiles() -> Array[Vector2i]:
+	return collected_resource_tiles
+
+func can_destroy_barracs(to_destroy: BuildingComponent) -> bool:
+	# -- 1) danger buildings deshabilitados por el edificio a destruir --
+	var danger_buildings: Array[BuildingComponent] = BuildingComponent.get_danger_building_component(self)
+	var to_destroy_tiles: Array[Vector2i] = attack_building_to_tiles.get(to_destroy, [])  # Dict[BuildingComponent -> Array[Vector2i]]
+	
+	var disabled_danger_buildings: Array[BuildingComponent] = danger_buildings.filter(
+		func(b: BuildingComponent) -> bool:
+			#var tiles = Rect2iExtensions.to_tiles(b.get_tile_area())
+			var tiles = b.get_occupied_cell_positions()
+			return tiles.any(func(tp: Vector2i) -> bool:
+				return to_destroy_tiles.has(tp)
+			)
+	)
+	if disabled_danger_buildings.is_empty():
+		return true
+	
+	# -- 2) ¿todos esos danger siguen deshabilitados por OTROS attack buildings? --
+	# Unimos los tiles de todos los attack salvo el que se destruye (consulta O(1))
+	var union_other := {}
+	for attack_building in attack_building_to_tiles.keys():
+		if attack_building == to_destroy:
+			continue
+		for t in attack_building_to_tiles[attack_building]:
+			union_other[t] = true
+	
+	var all_danger_buildings_still_disabled := disabled_danger_buildings.all(
+		func(db: BuildingComponent) -> bool:
+			#var tiles = Rect2iExtensions.to_tiles(db.get_tile_area())
+			var tiles = db.get_occupied_cell_positions()
+			return tiles.any(func(tp: Vector2i) -> bool:
+				return union_other.has(tp)
+			)
+	)
+	if all_danger_buildings_still_disabled:
+		return true
+	
+	# -- 3) Caso contrario: permitir destruir sólo si NINGÚN danger contiene celdas de edificios no-danger del jugador --
+	var non_danger_buildings: Array[BuildingComponent] = BuildingComponent.get_non_danger_building_components(self).filter(func(n: BuildingComponent) -> bool: return n != to_destroy)
+	
+	var any_danger_contains_player_building := disabled_danger_buildings.any(
+		func(danger_building: BuildingComponent) -> bool:
+			var danger_tiles: Array[Vector2i] = danger_building_to_tiles.get(danger_building, [])
+			return non_danger_buildings.any(
+				func(n: BuildingComponent) -> bool:
+					#var tiles_nd = Rect2iExtensions.to_tiles(n.get_tile_area())
+					var tiles_nd = n.get_occupied_cell_positions()
+					return tiles_nd.any(
+						func(tp: Vector2i) -> bool:
+							return danger_tiles.has(tp)
+					)
+			)
+	)
+	return not any_danger_contains_player_building
+
 
 func will_building_destruction_create_orphan_buildings(to_destroy_building_component: BuildingComponent) -> bool:
 	var dependent_buildings: Array[BuildingComponent] = BuildingComponent.get_non_danger_building_components(self)
@@ -148,18 +210,15 @@ func will_building_destruction_create_orphan_buildings(to_destroy_building_compo
 			if d_b == to_destroy_building_component: return false
 			if d_b.building_resource.is_base: return false
 			return building_to_buildable_tiles[to_destroy_building_component].has(tile_pos)
-		var any_tiles_radius = Rect2iExtensions.to_tiles(d_b.get_tile_area()).any(func_callable)
+		#var any_tiles_radius = Rect2iExtensions.to_tiles(d_b.get_tile_area()).any(func_callable)
+		var any_tiles_radius = d_b.get_occupied_cell_positions().any(func_callable)
 		if (d_b != to_destroy_building_component) and any_tiles_radius:
 			final_dependent_buildings.append(d_b)
 	
 	var f_c = func(dependent_building):
-		var tiles_for_building = Rect2iExtensions.to_tiles(dependent_building.get_tile_area())
+		#var tiles_for_building = Rect2iExtensions.to_tiles(dependent_building.get_tile_area())
+		var tiles_for_building = dependent_building.get_occupied_cell_positions()
 		var internal_func = func(tile_pos):
-				#var tile_set: Array
-				#for dict in building_to_buildable_tiles.keys():
-					#if dict != to_destroy_building_component and dict != dependent_building:
-						#tile_set.append(building_to_buildable_tiles[dict])
-				#var tile_is_in_set = tile_set.any(func(building_component): building_to_buildable_tiles[building_component].has(tile_pos))
 				var tile_is_in_set := false
 				for bc in building_to_buildable_tiles.keys():
 					if bc == to_destroy_building_component or bc == dependent_building:
@@ -191,32 +250,12 @@ func is_building_network_connected(to_destroy_building_component: BuildingCompon
 			total_buildings_to_visit += 1 
 	#print("visit_buildings.size() %d" % visit_buildings.size() )
 	return total_buildings_to_visit == visit_buildings.size()
-#
-#func visit_all_connected_buildings(
-	#root_building: BuildingComponent, 
-	#exclude_building: BuildingComponent, 
-	#visited_buildings: Array[BuildingComponent]
-	#) -> void:
-	#var dependent_buildings: Array[BuildingComponent] = BuildingComponent.get_valid_building_components(self)
-	##var final_dependent_buildings: Array[BuildingComponent] = []
-	#for d_b in dependent_buildings:
-		#if d_b.building_resource.danger_radius == 0: continue
-		#if visited_buildings.has(d_b): continue
-		#var func_callable = func(tile_pos):
-			#return building_to_buildable_tiles[root_building].has(tile_pos)
-		#var any_tiles_radius = Rect2iExtensions.to_tiles(d_b.get_tile_area()).any(func_callable)
-		#if (d_b != exclude_building) and any_tiles_radius:
-			#visited_buildings.append(d_b)
-	#for dependent_build in dependent_buildings:
-		#visit_all_connected_buildings(dependent_build, exclude_building, visited_buildings)
-# visited_buildings: pasa un Array[BuildingComponent] que actuará como "set".
-# Si querés O(1) de pertenencia, pasá también un Dictionary como set (ver nota abajo).
+
 func visit_all_connected_buildings(
 		root_building: BuildingComponent,
 		exclude_building: BuildingComponent,
 		visited_buildings: Array[BuildingComponent]
 		) -> void:
-	# ---- filtro de dependientes (Where ...) ----
 	var dependents: Array[BuildingComponent] = []
 	var root_tiles = building_to_buildable_tiles.get(root_building, [])
 	
@@ -225,22 +264,19 @@ func visit_all_connected_buildings(
 			continue
 		if visited_buildings.has(bc):
 			continue
-		# ¿bc toca algún tile de root_building?
-		var tiles := Rect2iExtensions.to_tiles(bc.get_tile_area())
-		# Si devuelve PackedVector2Array, descomentá:
-		# tiles = tiles.to_array()
-
+		#var tiles := Rect2iExtensions.to_tiles(bc.get_tile_area())
+		var tiles := bc.get_occupied_cell_positions()
 		var any_tiles_in_radius := tiles.all(
 			func(tp: Vector2i) -> bool:
 				return root_tiles.has(tp))
-
+		
 		if bc != exclude_building and any_tiles_in_radius:
 			dependents.append(bc)
-	# ---- visited.UnionWith(dependents) ----
+		
 		for d in dependents:
 			if not visited_buildings.has(d):
 				visited_buildings.append(d)
-		# ---- foreach dependent -> VisitAllConnectedBuildings(dependent, ...) ----
+		
 		for d in dependents:
 			visit_all_connected_buildings(d, exclude_building, visited_buildings)
 
@@ -275,18 +311,22 @@ func map_tile_map_layer_to_elevation_layers() -> void:
 			tile_map_layer_to_elevation_layer[layer] = elevation_layer
 	#print(tile_map_layer_to_elevation_layer)
 
-func update_goblin_occupied_tiles(building_component: BuildingComponent) -> void:
+func update_danger_occupied_tiles(building_component: BuildingComponent) -> void:
 	
 	for element in building_component.get_occupied_cell_positions():
 		if all_occuped_tiles.has(element): continue
 		all_occuped_tiles.append(element)
-	if building_component.is_disabled: return
-	var tile_area = building_component.get_tile_area()
+	
 	if building_component.building_resource.is_danger_building():
-		var tiles_in_radius = get_valid_tiles_in_radius(tile_area, building_component.building_resource.danger_radius)
-		for tile in tiles_in_radius:
-			if goblin_ocuppied_tiles.has(tile) or all_occuped_tiles.has(tile): continue
-			goblin_ocuppied_tiles.append(tile)
+		var tile_area = building_component.get_tile_area()
+		var tiles_in_radius: Array[Vector2i] = get_valid_tiles_in_radius(tile_area, building_component.building_resource.danger_radius)
+		
+		danger_building_to_tiles[building_component] = tiles_in_radius
+		
+		if !building_component.is_disabled:
+			for tile in tiles_in_radius:
+				if danger_ocuppied_tiles.has(tile) or all_occuped_tiles.has(tile): continue
+				danger_ocuppied_tiles.append(tile)
 
 func update_valiable_buildable_tiles(building_component: BuildingComponent) -> void:
 	#all_occuped_tiles.append(building_component.get_occupied_cell_positions())
@@ -314,7 +354,7 @@ func update_valiable_buildable_tiles(building_component: BuildingComponent) -> v
 		valid_buildable_attack_tiles.append(tile_vector)
 	
 	#print(valid_attack_tiles)
-	for tile_vector in goblin_ocuppied_tiles:
+	for tile_vector in danger_ocuppied_tiles:
 		vailable_buildable_tiles.erase(tile_vector)
 	#print(vailable_buildable_tiles)
 	grid_state_updated_event_handler.emit()
@@ -339,6 +379,7 @@ func update_attack_tiles(building_component: BuildingComponent) -> void:
 
 	var tile_area = building_component.get_tile_area()
 	var new_attack_tiles = get_tiles_in_radius(tile_area, building_component.building_resource.attack_radius, func(a): return true)
+	attack_building_to_tiles[building_component] = new_attack_tiles
 	for tile in new_attack_tiles:
 		if attack_tiles.has(tile): continue
 		attack_tiles.append(tile)
@@ -349,31 +390,34 @@ func recalculate_grid() -> void:
 	valid_buildable_attack_tiles.clear()
 	all_tiles_in_building_radius.clear()
 	collected_resource_tiles.clear()
-	goblin_ocuppied_tiles.clear()
+	danger_ocuppied_tiles.clear()
 	attack_tiles.clear()
 	building_to_buildable_tiles.clear()
+	danger_building_to_tiles.clear()
+	attack_building_to_tiles.clear()
 	#var building_components = get_tree().get_nodes_in_group(BuildingComponent.GROUP)
 	var building_components = BuildingComponent.get_valid_building_components(self)
 	for existing_building_component in building_components:
 		update_building_component_grid_state(existing_building_component)
 	
-	check_goblin_camp_destruction()
+	check_danger_building_destruction()
 	
 	resource_tiles_updated_event_handler.emit(collected_resource_tiles.size())
 	grid_state_updated_event_handler.emit()
 
-func recalculate_goblin_occupied_tiles():
-	goblin_ocuppied_tiles.clear()
+func recalculate_danger_occupied_tiles():
+	danger_ocuppied_tiles.clear()
 	var danger_buildings = BuildingComponent.get_danger_building_component(self)
 	for building in danger_buildings:
-		update_goblin_occupied_tiles(building)
+		update_danger_occupied_tiles(building)
 
 
-func check_goblin_camp_destruction() -> void:
+func check_danger_building_destruction() -> void:
 	var danger_buildings = BuildingComponent.get_danger_building_component(self)
 	for building in danger_buildings:
-		var tile_area = building.get_tile_area()
-		var is_inside_attack_tile = Rect2iExtensions.to_tiles(tile_area).any(func(tile_pos): return attack_tiles.has(tile_pos))
+		#var tile_area = building.get_tile_area()
+		#var is_inside_attack_tile = Rect2iExtensions.to_tiles(tile_area).any(func(tile_pos): return attack_tiles.has(tile_pos))
+		var is_inside_attack_tile = building.get_occupied_cell_positions().any(func(tile_pos): return attack_tiles.has(tile_pos))
 		if is_inside_attack_tile:
 			building.disable()
 		else:
@@ -415,16 +459,9 @@ func get_resource_tiles_in_radius(tile_area: Rect2i, radius: int) -> Array[Vecto
 		func(tile_pos: Vector2i) -> bool: return get_tile_custom_data(tile_pos, IS_WOOD)[1]
 	)
 
-#func get_occupied_tiles() -> Array[Vector2i]:
-	#var building_components = get_tree().get_nodes_in_group(BuildingComponent.GROUP)
-	#var occuped_tiles: Array[Vector2i]
-	#for existing_building_component in building_components:
-		#occuped_tiles.append(existing_building_component.get_grid_cell_position()) 
-	#return occuped_tiles
-
 func update_building_component_grid_state(building_component: BuildingComponent) -> void:
 	#print("recalculate grid")
-	update_goblin_occupied_tiles(building_component)
+	update_danger_occupied_tiles(building_component)
 	update_valiable_buildable_tiles(building_component)
 	update_collected_resource_tiles(building_component)
 	update_attack_tiles(building_component)
@@ -432,7 +469,7 @@ func update_building_component_grid_state(building_component: BuildingComponent)
 func _on_building_placed_event_handler(building_component: BuildingComponent) -> void:
 	#print(building_component)
 	update_building_component_grid_state(building_component)
-	check_goblin_camp_destruction()
+	check_danger_building_destruction()
 
 func _on_building_destroy(building_component: BuildingComponent) -> void:
 	recalculate_grid()

@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3 uid="uid://bxm6it4h25ej5"]
+[gd_scene load_steps=14 format=3 uid="uid://bxm6it4h25ej5"]
 
 [ext_resource type="Script" uid="uid://cxubiqs0elcyo" path="res://scenes/level/base_level.gd" id="1_o5qli"]
 [ext_resource type="TileSet" uid="uid://db2ac5g8of54p" path="res://resources/highlight_tileset.tres" id="2_0wfyh"]
@@ -8,6 +8,7 @@
 [ext_resource type="PackedScene" uid="uid://de3vjktwnf6i0" path="res://scenes/ui/level_complete_screen.tscn" id="2_u35hf"]
 [ext_resource type="PackedScene" uid="uid://c6tjcpeyvq8dm" path="res://scenes/game_camera.tscn" id="5_2qxot"]
 [ext_resource type="PackedScene" uid="uid://de2vsc8u8dgpy" path="res://scenes/building/Base.tscn" id="5_tbgi4"]
+[ext_resource type="PackedScene" uid="uid://btn6elqrbpnpf" path="res://scenes/manager/resource_indicator_manager.tscn" id="6_8x4to"]
 [ext_resource type="PackedScene" uid="uid://d04huotpateq" path="res://scenes/ui/game_ui.tscn" id="6_tefeu"]
 [ext_resource type="PackedScene" uid="uid://batoibr6s8u6u" path="res://scenes/gold_mine.tscn" id="7_85g3d"]
 [ext_resource type="Texture2D" uid="uid://dg7us1wbqpgw4" path="res://assets/GoldMine_Active.png" id="8_choun"]
@@ -49,9 +50,12 @@ unique_name_in_owner = true
 active_texture = ExtResource("8_choun")
 
 [node name="HighlightTileMapLayer" type="TileMapLayer" parent="YSortRoot"]
-modulate = Color(1, 1, 1, 0.49803922)
+modulate = Color(1, 1, 1, 0.7058824)
 y_sort_enabled = true
 tile_set = ExtResource("2_0wfyh")
+
+[node name="ResourceIndicatorManager" parent="." node_paths=PackedStringArray("grid_manager") instance=ExtResource("6_8x4to")]
+grid_manager = NodePath("../GridManager")
 
 [node name="GameUI" parent="." node_paths=PackedStringArray("building_manager") instance=ExtResource("6_tefeu")]
 building_manager = NodePath("../BuildingManager")
