@@ -1,9 +1,12 @@
-[gd_scene load_steps=5 format=4 uid="uid://4nckkm4tq0c5"]
+[gd_scene load_steps=8 format=4 uid="uid://4nckkm4tq0c5"]
 
 [ext_resource type="PackedScene" uid="uid://bxm6it4h25ej5" path="res://scenes/level/base_level.tscn" id="1_ao1bm"]
 [ext_resource type="Resource" uid="uid://cai5nrvsbkknw" path="res://resources/level/level_02.tres" id="2_5g03a"]
 [ext_resource type="TileSet" uid="uid://ce56rhsp37vqq" path="res://resources/tiles.tres" id="2_u7l0e"]
 [ext_resource type="PackedScene" uid="uid://dr8vr2isiriqj" path="res://scenes/level/util/elevation_layer.tscn" id="3_2g46k"]
+[ext_resource type="Script" uid="uid://cgiqc6e46avo6" path="res://resources/building/building_resource.gd" id="5_xwd00"]
+[ext_resource type="Resource" uid="uid://di3k7tp0sdtql" path="res://resources/building/tower.tres" id="6_4o7lk"]
+[ext_resource type="Resource" uid="uid://b7eot0tl6c8sk" path="res://resources/building/village.tres" id="7_cwurx"]
 
 [node name="Level2" instance=ExtResource("1_ao1bm")]
 level_definition_resource = ExtResource("2_5g03a")
@@ -62,6 +65,7 @@ position = Vector2(1664, 384)
 
 [node name="GameUI" parent="." index="5"]
 visible = false
+building_resources = Array[ExtResource("5_xwd00")]([ExtResource("6_4o7lk"), ExtResource("7_cwurx")])
 
 [editable path="YSortRoot/BaseTerrainTileMapLayer/ElevationLayer"]
 [editable path="YSortRoot/BaseTerrainTileMapLayer/ElevationLayer2"]

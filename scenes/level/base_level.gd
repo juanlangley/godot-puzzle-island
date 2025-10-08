@@ -21,6 +21,8 @@ func _ready() -> void:
 	game_camera.set_bounding_rect(base_terrain_tile_map_layer.get_used_rect())
 	game_camera.center_on_position(base.global_position)
 	game_ui.visible = true
+	if level_definition_resource.tutorial_scene != null:
+		game_ui.tutorial_UI_visible(level_definition_resource.tutorial_scene)
 	
 	grid_manager.set_gold_mine_position(grid_manager.convert_world_position_to_tile_position(gold_mine.global_position))
 
