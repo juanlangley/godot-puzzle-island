@@ -39,6 +39,7 @@ theme_override_styles/panel = SubResource("StyleBoxTexture_ltnpl")
 
 [node name="Label" type="Label" parent="MarginContainer/VBoxContainer/RibbonContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 32
 text = "LEVEL COMPLETE!"
 
