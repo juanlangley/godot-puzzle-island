@@ -1,7 +1,8 @@
-[gd_scene load_steps=9 format=4 uid="uid://bo8xb4j32p66e"]
+[gd_scene load_steps=10 format=4 uid="uid://bo8xb4j32p66e"]
 
 [ext_resource type="Script" uid="uid://ofdxnow0gfon" path="res://scenes/ui/main_menu.gd" id="1_btxxm"]
 [ext_resource type="TileSet" uid="uid://ce56rhsp37vqq" path="res://resources/tiles.tres" id="2_fe2o3"]
+[ext_resource type="PackedScene" uid="uid://begq8pip2mxpl" path="res://scenes/ui/options_menu.tscn" id="2_q85j6"]
 [ext_resource type="PackedScene" uid="uid://dr8vr2isiriqj" path="res://scenes/level/util/elevation_layer.tscn" id="2_uhagc"]
 [ext_resource type="PackedScene" uid="uid://dhphany110nlr" path="res://scenes/building/village.tscn" id="3_1g8jr"]
 [ext_resource type="PackedScene" uid="uid://de2vsc8u8dgpy" path="res://scenes/building/Base.tscn" id="3_btxxm"]
@@ -11,6 +12,7 @@
 
 [node name="MainMenu" type="Node"]
 script = ExtResource("1_btxxm")
+options_menu_scene = ExtResource("2_q85j6")
 
 [node name="Camera2D" type="Camera2D" parent="."]
 position = Vector2(704, 384)
@@ -103,10 +105,12 @@ layout_mode = 2
 text = "Play"
 
 [node name="OptionButton" type="Button" parent="CanvasLayer/MainMenuCointainer/PanelContainer/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
 layout_mode = 2
 text = "Options"
 
 [node name="QuitButton" type="Button" parent="CanvasLayer/MainMenuCointainer/PanelContainer/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
 layout_mode = 2
 text = "Quit"
 
@@ -115,6 +119,7 @@ unique_name_in_owner = true
 visible = false
 
 [connection signal="pressed" from="CanvasLayer/MainMenuCointainer/PanelContainer/MarginContainer/VBoxContainer/PlayButton" to="." method="_on_play_button_pressed"]
+[connection signal="pressed" from="CanvasLayer/MainMenuCointainer/PanelContainer/MarginContainer/VBoxContainer/OptionButton" to="." method="_on_option_button_pressed"]
 [connection signal="pressed" from="CanvasLayer/MainMenuCointainer/PanelContainer/MarginContainer/VBoxContainer/QuitButton" to="." method="_on_quit_button_pressed"]
 
 [editable path="YSortRoot/BaseTerrainTileMapLayer/ElevationLayer2"]

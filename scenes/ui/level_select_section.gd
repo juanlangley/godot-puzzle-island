@@ -1,9 +1,14 @@
 extends PanelContainer
 
+@onready var button: Button = %Button
 @onready var level_number_label: Label = %LevelNumberLabel
 @onready var resource_count_label: Label = %ResourceCountLabel
 var level_index: int
 signal level_selected_event_handler(level_index: int)
+
+func _ready() -> void:
+	var buttons: Array[Button]= [button]
+	AudioHelpers.register_buttons(buttons)
 
 func set_level_definition(level_definition_resource: LevelDefinitionResource) -> void:
 	resource_count_label.text = "%d" % level_definition_resource.starting_resource_count

@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://fvxetwg76l3o"]
+
+[ext_resource type="Script" uid="uid://d4ksn6tw3ipqx" path="res://autoload/options_helper.gd" id="1_j7e4c"]
+
+[node name="OptionsHelper" type="Node"]
+script = ExtResource("1_j7e4c")

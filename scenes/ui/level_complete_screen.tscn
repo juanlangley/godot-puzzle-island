@@ -16,6 +16,7 @@ region_rect = Rect2(0, 0, 192, 61)
 
 [node name="LevelCompleteScreen" type="CanvasLayer"]
 script = ExtResource("1_ltnpl")
+main_menu_scene_path = "uid://bo8xb4j32p66e"
 
 [node name="MarginContainer" type="MarginContainer" parent="."]
 anchors_preset = 15

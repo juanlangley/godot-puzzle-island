@@ -8,7 +8,8 @@ class_name BuildingSelection
 @onready var description_label: Label = %DescriptionLabel
 
 func _ready() -> void:
-	pass
+	var buttons: Array[Button] = [select_button]
+	AudioHelpers.register_buttons(buttons)
 
 
 func set_building_resource(building_resource: BuildingResource) -> void:

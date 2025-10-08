@@ -28,6 +28,8 @@ var building_to_buildable_tiles: Dictionary[BuildingComponent, Array]
 var danger_building_to_tiles: Dictionary[BuildingComponent, Array]
 var attack_building_to_tiles: Dictionary[BuildingComponent, Array]
 
+var gold_mine_position: Vector2i
+
 func _ready() -> void:
 	GameEvents.building_placed_event_handler.connect(_on_building_placed_event_handler)
 	GameEvents.building_destroyed_event_handler.connect(_on_building_destroy)
@@ -36,6 +38,9 @@ func _ready() -> void:
 	all_tile_map_layers = get_all_tile_map_layers(base_terrain_tile_map_layer)
 	map_tile_map_layer_to_elevation_layers()
 	#print(all_tile_map_layers)
+
+func set_gold_mine_position(position: Vector2i) -> void:
+	gold_mine_position = position
 
 func get_tile_custom_data(tile_position: Vector2i, data_name: String) -> Array:
 	for layer in all_tile_map_layers:
@@ -449,7 +454,7 @@ func get_valid_tiles_in_radius(tile_area: Rect2i, radius: int) -> Array[Vector2i
 	return get_tiles_in_radius(
 		tile_area,
 		radius,
-		func(tile_pos: Vector2i) -> bool: return get_tile_custom_data(tile_pos, IS_BUILDABLE)[1]
+		func(tile_pos: Vector2i) -> bool: return get_tile_custom_data(tile_pos, IS_BUILDABLE)[1] || tile_pos == gold_mine_position
 	)
 
 func get_resource_tiles_in_radius(tile_area: Rect2i, radius: int) -> Array[Vector2i]:

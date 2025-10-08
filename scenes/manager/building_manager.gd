@@ -85,15 +85,18 @@ func _unhandled_input(event: InputEvent) -> void:
 		STATE.NORMAL:
 			if event.is_action_pressed(ACTION_RIGHT_CLICK):
 				destroy_building_at_hovered_cell_position()
+				get_viewport().set_input_as_handled()
 		STATE.PLACING_BUILDING:
 			if event.is_action_pressed(ACTION_CANCEL):
 				change_state(STATE.NORMAL)
+				get_viewport().set_input_as_handled()
 			elif (#has_hover and 
 				#to_place_building_scene != null and
 				event.is_action_pressed(ACTION_LEFT_CLICK) and 
 				is_building_placeable_at_area(hover_grid_area)
 			):
 				place_building_at_mouse_position()
+				get_viewport().set_input_as_handled()
 		_:
 			pass
 

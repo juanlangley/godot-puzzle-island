@@ -5,6 +5,7 @@ signal back_press_event()
 @onready var grid_container: GridContainer = %GridContainer
 @onready var previous_page_button: Button = %PreviousPageButton
 @onready var next_page_button: Button = %NextPageButton
+@onready var back_button: Button = %BackButton
 
 const PAGE_SIZE: int = 6
 var page_index: int
@@ -12,6 +13,8 @@ var page_index: int
 var level_definitions: Array[LevelDefinitionResource]
 var max_page_index: int
 func _ready() -> void:
+	var buttons: Array[Button] = [previous_page_button, next_page_button, back_button]
+	AudioHelpers.register_buttons(buttons)
 	
 	level_definitions = LevelManager.get_level_definitions()
 	max_page_index = level_definitions.size() / PAGE_SIZE

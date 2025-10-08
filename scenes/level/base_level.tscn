@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3 uid="uid://bxm6it4h25ej5"]
+[gd_scene load_steps=15 format=3 uid="uid://bxm6it4h25ej5"]
 
 [ext_resource type="Script" uid="uid://cxubiqs0elcyo" path="res://scenes/level/base_level.gd" id="1_o5qli"]
 [ext_resource type="TileSet" uid="uid://db2ac5g8of54p" path="res://resources/highlight_tileset.tres" id="2_0wfyh"]
@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" uid="uid://bhp4ynjaud47p" path="res://scenes/manager/building_manager.tscn" id="2_o6xl0"]
 [ext_resource type="TileSet" uid="uid://ce56rhsp37vqq" path="res://resources/tiles.tres" id="2_sugp2"]
 [ext_resource type="PackedScene" uid="uid://de3vjktwnf6i0" path="res://scenes/ui/level_complete_screen.tscn" id="2_u35hf"]
+[ext_resource type="PackedScene" uid="uid://cns571gmcej5o" path="res://scenes/ui/escape_menu.tscn" id="3_qf4k4"]
 [ext_resource type="PackedScene" uid="uid://c6tjcpeyvq8dm" path="res://scenes/game_camera.tscn" id="5_2qxot"]
 [ext_resource type="PackedScene" uid="uid://de2vsc8u8dgpy" path="res://scenes/building/Base.tscn" id="5_tbgi4"]
 [ext_resource type="PackedScene" uid="uid://btn6elqrbpnpf" path="res://scenes/manager/resource_indicator_manager.tscn" id="6_8x4to"]
@@ -17,6 +18,7 @@
 [node name="BaseLevel" type="Node"]
 script = ExtResource("1_o5qli")
 level_complete_screen_scene = ExtResource("2_u35hf")
+escape_menu_scene = ExtResource("3_qf4k4")
 
 [node name="BuildingManager" parent="." node_paths=PackedStringArray("grid_manager", "game_ui", "y_sort_root") instance=ExtResource("2_o6xl0")]
 grid_manager = NodePath("../GridManager")

@@ -17,3 +17,6 @@ func change_to_level(level_index: int) -> void:
 
 func change_to_next_level():
 	change_to_level(current_level_index + 1)
+
+func is_last_level() -> bool:
+	return current_level_index == level_definitions.size() - 1
